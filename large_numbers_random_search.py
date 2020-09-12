@@ -8,11 +8,15 @@ from wolframclient.evaluation import WolframLanguageSession
 from wolframclient.language import wl, wlexpr
 session = WolframLanguageSession()
 
+''' 
+For the experiments detailed in the paper, 4 instances were run, with seeds {10000,20000,30000,40000}, each generating 8000 random instances. 
+'''
+random.seed(20000)
 
 
 FACTORIALS = [1,1]
 
-for i in range(2,1200):
+for i in range(2,2400):
 	FACTORIALS.append(FACTORIALS[-1] * i)
 
 handle = open("PARTITIONS","rb")
@@ -35,7 +39,6 @@ def partitions(n, m = None):
 Given a polynomial in string form, extract the coefficients using string operations and sum according to the formula in the paper.
 '''
 def gen_thresh(expanded_poly, m, t, T):
-
 	shapley_string = ""
 	tot_sum = 0
 	for j in range(T):
@@ -70,6 +73,8 @@ def gen_thresh(expanded_poly, m, t, T):
 
 
 	shapley_string += ",100]"
+
+	# There is a very weird occurence with seed 20000 and random_try 3673 where Mathematica gives ~9.89x10^-10 but the python interface omits the exponential, only returning 9.89 and resulting in an invalid result. 
 	tot_sum = float(session.evaluate(wlexpr(shapley_string)))
 
 	return tot_sum
@@ -89,10 +94,31 @@ def generating_shapley(strategic_players, m):
 
 	return expanded_poly
 
+'''for m in range(100,1000,100):
+	max_ratio = 1
+	args = []
+	k = 4 * int(math.sqrt(m))
+	print(k)
+	T = int((m + k) / 2)
+	exp_polyA = generating_shapley([k],m)
+
+	valA = 1 - m *gen_thresh(exp_polyA,m, 1, T)
+
+	if valA/(2*k/(m+k)) > max_ratio:
+		args = [k,m,T]
+		max_ratio = max(max_ratio, realSlim/(2*k/(m+k)))
+'''
+
+
 max_ratio = 0
 min_ratio = 7 
-for random_try in range(100):
-	print(random_try)
+histograms = {}
+for random_try in range(10000):
+	if random_try % 1000 == 0 or random_try % 1000 == 1:
+		print("Round number: {}".format(random_try))
+		print("Histograms: {}".format(histograms))
+		print("Max ratio: {}".format(max_ratio))
+		print("Min ratio: {}".format(min_ratio))
 	t = random.randint(20,30)
 	m = random.randint(t+1,400)
 	strategic_players = []
@@ -100,7 +126,6 @@ for random_try in range(100):
 		strategic_players.append(random.randint(1,59))
 
 	total_sum = sum(strategic_players)
-	exp_polyA = generating_shapley(strategic_players,m)
 
 
 
@@ -112,17 +137,25 @@ for random_try in range(100):
 
 
 
-	exp_polyB = generating_shapley(subpar,m)
-
 	T = random.randint(1,m+total_sum)
 
-	valA = 1 - m *gen_thresh(exp_polyA,m, t, T)
-	valB = 1 - m *gen_thresh(exp_polyB,m, len(subpar), T)
+	if random_try >= 7000:
+		exp_polyA = generating_shapley(strategic_players,m)
+		exp_polyB = generating_shapley(subpar,m)
+		valA = 1 - m *gen_thresh(exp_polyA,m, t, T)
+		valB = 1 - m *gen_thresh(exp_polyB,m, len(subpar), T)
 
-	print("m={},t={},T={},valA={},valB={},A={},B={}".format(m,sum(strategic_players), T,valA,valB,strategic_players,subpar))
-	ratio = valA / valB
-	max_ratio = max(max_ratio, ratio)
-	min_ratio = min(min_ratio, ratio)
+		#print("m={},t={},T={},valA={},valB={},A={},B={}".format(m,sum(strategic_players), T,valA,valB,strategic_players,subpar))
+		ratio = valA / valB
+		if ratio < 0:
+			continue
+		max_ratio = max(max_ratio, ratio)
+		min_ratio = min(min_ratio, ratio)
+		rounded_ratio = int(ratio*10) / 10
+		if rounded_ratio in histograms:
+			histograms[rounded_ratio] += 1
+		else:
+			histograms[rounded_ratio] = 1
 
 print("Max ratio: {}".format(max_ratio))
 
@@ -130,5 +163,6 @@ print("Max ratio: {}".format(max_ratio))
 print("Min ratio: {}".format(min_ratio))
 
 
+print(histograms)
 
 
