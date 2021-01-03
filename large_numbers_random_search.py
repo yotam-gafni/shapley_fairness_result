@@ -113,6 +113,7 @@ def generating_shapley(strategic_players, m):
 max_ratio = 0
 min_ratio = 7 
 histograms = {}
+histograms_corr = {}
 for random_try in range(10000):
 	if random_try % 1000 == 0 or random_try % 1000 == 1:
 		print("Round number: {}".format(random_try))
@@ -139,23 +140,33 @@ for random_try in range(10000):
 
 	T = random.randint(1,m+total_sum)
 
-	if random_try >= 7000:
+	if random_try >= 9990:
 		exp_polyA = generating_shapley(strategic_players,m)
 		exp_polyB = generating_shapley(subpar,m)
 		valA = 1 - m *gen_thresh(exp_polyA,m, t, T)
 		valB = 1 - m *gen_thresh(exp_polyB,m, len(subpar), T)
+		valProp = sum(strategic_players) / (sum(strategic_players) + m)
 
 		#print("m={},t={},T={},valA={},valB={},A={},B={}".format(m,sum(strategic_players), T,valA,valB,strategic_players,subpar))
 		ratio = valA / valB
+		partRatio = valB / (valA / 2)
+		boundRatio = 2 * valProp / (valA /2)
 		if ratio < 0:
 			continue
+		logForm = math.log(partRatio, boundRatio)
 		max_ratio = max(max_ratio, ratio)
 		min_ratio = min(min_ratio, ratio)
 		rounded_ratio = int(ratio*10) / 10
+		rounded_corr = int(logForm * 20) / 20 
 		if rounded_ratio in histograms:
 			histograms[rounded_ratio] += 1
 		else:
 			histograms[rounded_ratio] = 1
+
+		if rounded_corr in histograms_corr:
+			histograms_corr[rounded_corr] += 1
+		else:
+			histograms_corr[rounded_corr] = 1
 
 print("Max ratio: {}".format(max_ratio))
 
@@ -163,6 +174,7 @@ print("Max ratio: {}".format(max_ratio))
 print("Min ratio: {}".format(min_ratio))
 
 
-print(histograms)
+print("HISTOGRAMS FOR CONJECTURE: {}".format(histograms))
+print("HISOTGRAMS FOR COROLLARY: {}".format(histogram_corr))
 
 
