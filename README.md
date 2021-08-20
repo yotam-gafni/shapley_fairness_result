@@ -1,3 +1,4 @@
+Use python version 3.
 First, use
 
 - python generate_partitions.py
@@ -13,3 +14,7 @@ Steps to run Large numbers random search:
 You will need to have wolframclient installed to perform Mathematica operations within python. 
 Then run -  
 - python large_numbers_random_search.py 
+
+Steps to run different definitions of small exhaustive search:
+
+- python diff_base_small.py
